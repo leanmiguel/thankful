@@ -8,28 +8,27 @@
   <link rel='stylesheet' href='/static/css/main.css'>
   <link rel="stylesheet" href="https://unpkg.com/open-props"/>
   <link rel="stylesheet" href="https://unpkg.com/open-props/normalize.min.css"/>
-
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
 
 </head>
 <body>
+<div >
   <h1>Thankful</h1>
 
-
 <div class="container">
-
- <p> <a href="/today">Today</a></p> 
-
-  <hr style="background:transparent; margin: 20px;"></hr>
-  <p><a href="/today">Feb 18, 2022</a></p>  
-  <p><a href="/today">Feb 19, 2022</a>  </p> 
- <p> <a href="/today">Feb 20, 2022</a>  </p> 
-
+    <p class="created_time">{{.CreatedTime}}</p>
+    <p class="thankful-for">I Was Thankful For</p>
+    {{range .Entries}}
+    <li>
+    {{.}}
+    </li>
+    {{end}}
+  
+  <a href="/">Return</a>
     </div>
   </div>
-  
-
-
-  
-  
 </body>
 </html>

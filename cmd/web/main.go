@@ -1,64 +1,96 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
+
+	"leanmiguel/thankful/pkg/models/dynamo"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-type Item struct {
-	UserId      string   `json:"user_id"`
-	CreatedTime string   `json:"created_time"`
-	Entries     []string `json:"entries"`
+// type Entry struct {
+// 	UserId      string   `json:"user_id"`
+// 	CreatedTime string   `json:"created_time"`
+// 	Entries     []string `json:"entries"`
+// }
+
+// type Entries []Entry
+
+type Config struct {
+	Addr      string
+	StaticDir string
+}
+
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	entries  *dynamo.EntryModel
 }
 
 func main() {
-	// Use the http.NewServeMux() function to initialize a new servemux, then
-	// register the home function as the handler for the "/" URL pattern.
-	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/today", serveTodayScreen)
-	mux.HandleFunc("/api/days", home)
+	cfg := new(Config)
 
-	// awsCfg := &aws.Config{
-	// 	Region:   aws.String("us-west-2"),
-	// 	LogLevel: aws.LogLevel(aws.LogDebugWithEventStreamBody),
-	// }
-	// mySession := session.Must(session.NewSession())
-	// svc := dynamodb.New(mySession, awsCfg)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	// result, err := svc.GetItem(&dynamodb.GetItemInput{
-	// 	TableName: aws.String("thankful_entries"),
-	// 	Key: map[string]*dynamodb.AttributeValue{
-	// 		"user_id":      {S: aws.String("lean")},
-	// 		"created_time": {S: aws.String("2022/02/21 19:23:37")},
-	// 	},
-	// })
+	awsCfg := &aws.Config{
+		Region:   aws.String("us-west-2"),
+		LogLevel: aws.LogLevel(aws.LogDebugWithEventStreamBody),
+	}
+	mySession := session.Must(session.NewSession())
 
-	// if err != nil {
-	// 	log.Fatalf("Got error calling GetItem: %s", err)
-	// }
+	db := dynamodb.New(mySession, awsCfg)
 
-	// if result.Item == nil {
-	// 	fmt.Println("bad news")
-	// }
+	app := &application{
+		infoLog:  infoLog,
+		errorLog: errorLog,
+		entries:  &dynamo.EntryModel{DB: db},
+	}
 
-	// item := Item{}
+	flag.StringVar(&cfg.Addr, "addr", ":4000", "HTTP network address")
+	flag.StringVar(&cfg.StaticDir, "static-dir", "./ui/static", "Path to static assets")
+	flag.Parse()
 
-	// fmt.Println(result.Item)
-	// err = dynamodbattribute.UnmarshalMap(result.Item, &item)
+	infoLog.Printf("Starting server on %s", cfg.Addr)
 
-	// if err != nil {
-	// 	panic(fmt.Sprintf("Failed to unmarshal Record, %v", err))
-	// }
+	srv := &http.Server{
+		Addr:     cfg.Addr,
+		ErrorLog: errorLog,
+		Handler:  app.routes(),
+	}
 
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
+	err := srv.ListenAndServe()
+	errorLog.Fatal(err)
 
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	log.Println("Starting server on :4000")
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatal(err)
-
-	// fmt.Println(time.Now())
 }
+
+// result, err := db.GetItem(&dynamodb.GetItemInput{
+// 	TableName: aws.String("thankful_entries"),
+// 	Key: map[string]*dynamodb.AttributeValue{
+// 		"user_id":      {S: aws.String("lean")},
+// 		"created_time": {S: aws.String("2022-02-22T11:53:28Z")},
+// 	},
+// })
+
+// if err != nil {
+// 	log.Fatalf("Got error calling GetItem: %s", err)
+// }
+
+// if result.Item == nil {
+// 	fmt.Println("bad news")
+// }
+
+// item := Entry{}
+
+// fmt.Println(result.Item)
+// err = dynamodbattribute.UnmarshalMap(result.Item, &item)
+
+// if err != nil {
+// 	panic(fmt.Sprintf("Failed to unmarshal Record, %v", err))
+// }
