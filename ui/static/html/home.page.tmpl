@@ -19,10 +19,13 @@
 
  <p> <a href="/today">Today</a></p> 
 
-  <hr style="background:transparent; margin: 20px;"></hr>
-  <p><a href="/today">Feb 18, 2022</a></p>  
-  <p><a href="/today">Feb 19, 2022</a>  </p> 
- <p> <a href="/today">Feb 20, 2022</a>  </p> 
+    {{range .AvailableDates}}
+    <li>
+    <a href="{{ .DateURL}}">
+    {{ .Date}}
+    </a>
+    </li>
+    {{end}}
 
     </div>
   </div>

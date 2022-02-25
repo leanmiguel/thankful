@@ -13,14 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-// type Entry struct {
-// 	UserId      string   `json:"user_id"`
-// 	CreatedTime string   `json:"created_time"`
-// 	Entries     []string `json:"entries"`
-// }
-
-// type Entries []Entry
-
 type Config struct {
 	Addr      string
 	StaticDir string
@@ -40,8 +32,8 @@ func main() {
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	awsCfg := &aws.Config{
-		Region:   aws.String("us-west-2"),
-		LogLevel: aws.LogLevel(aws.LogDebugWithEventStreamBody),
+		Region: aws.String("us-west-2"),
+		// LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody),
 	}
 	mySession := session.Must(session.NewSession())
 
@@ -69,28 +61,3 @@ func main() {
 	errorLog.Fatal(err)
 
 }
-
-// result, err := db.GetItem(&dynamodb.GetItemInput{
-// 	TableName: aws.String("thankful_entries"),
-// 	Key: map[string]*dynamodb.AttributeValue{
-// 		"user_id":      {S: aws.String("lean")},
-// 		"created_time": {S: aws.String("2022-02-22T11:53:28Z")},
-// 	},
-// })
-
-// if err != nil {
-// 	log.Fatalf("Got error calling GetItem: %s", err)
-// }
-
-// if result.Item == nil {
-// 	fmt.Println("bad news")
-// }
-
-// item := Entry{}
-
-// fmt.Println(result.Item)
-// err = dynamodbattribute.UnmarshalMap(result.Item, &item)
-
-// if err != nil {
-// 	panic(fmt.Sprintf("Failed to unmarshal Record, %v", err))
-// }
