@@ -4,22 +4,11 @@ import (
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const layoutUS = "January 2, 2006"
-
-// entries := &[]models.Entry{
-// 	{
-// 		UserId:      "lean",
-// 		CreatedTime: "2022-02-22T11:53:28Z",
-// 		Entries:     []string{"1", "2", "3"},
-// 	},
-// 	{
-// 		UserId:      "lean",
-// 		CreatedTime: "2022-02-23T11:53:28Z",
-// 		Entries:     []string{"1", "2", "3"},
-// 	},
-// }
 
 type EntryData struct {
 	Date    string
@@ -27,6 +16,11 @@ type EntryData struct {
 }
 type homeTemplateData struct {
 	AvailableDates []EntryData
+}
+
+type dayTemplateData struct {
+	Entries     []string
+	CreatedDate string
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +94,37 @@ func (app *application) serveTodayScreen(w http.ResponseWriter, r *http.Request)
 
 }
 func (app *application) serveDayScreen(w http.ResponseWriter, r *http.Request) {
-	app.entries.Get("lean", "2022-02-22")
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"name":"not alex"}`))
+
+	ts, err := template.ParseFiles("./ui/static/html/[date].page.tmpl")
+
+	if err != nil {
+		app.serverError(w, err)
+		http.Error(w, "internal server error", 500)
+	}
+
+	day := chi.URLParam(r, "day")
+
+	entry, err := app.entries.Get("lean", day)
+
+	if err != nil {
+		app.serverError(w, err)
+		http.Error(w, "internal server error", 500)
+	}
+
+	createdTime, err := time.Parse(time.RFC3339, entry.CreatedTime)
+	formattedTime := createdTime.Format(layoutUS)
+
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	err = ts.Execute(w, dayTemplateData{
+		Entries:     entry.Entries,
+		CreatedDate: formattedTime,
+	})
+
+	if err != nil {
+		app.serverError(w, err)
+		http.Error(w, "Internal Server Error", 500)
+	}
 }
