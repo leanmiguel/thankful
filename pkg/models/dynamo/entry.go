@@ -2,6 +2,8 @@ package dynamo
 
 import (
 	"leanmiguel/thankful/pkg/models"
+	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -17,7 +19,34 @@ type EntryModel struct {
 	DB *dynamodb.DynamoDB
 }
 
-func (m *EntryModel) Insert(user, content string) (int, error) {
+func (m *EntryModel) Insert(user string, entries []string) (int, error) {
+
+	createdTime := time.Now().UTC().Format(time.RFC3339)
+
+	entry := models.Entry{
+		UserId:      user,
+		CreatedTime: createdTime,
+		Entries:     entries,
+	}
+
+	av, err := dynamodbattribute.MarshalMap(entry)
+
+	if err != nil {
+		log.Fatalf("Got error marshalling new movie item: %s", err)
+	}
+
+	entryInput := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(ThankfulEntriesTableName),
+	}
+
+	_, err = m.DB.PutItem(entryInput)
+	if err != nil {
+		log.Fatalf("Got error calling PutItem: %s", err)
+	}
+
+	// fmt.Println("DID WE DO")
+
 	return 0, nil
 }
 

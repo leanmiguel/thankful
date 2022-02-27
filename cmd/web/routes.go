@@ -14,6 +14,7 @@ func (app *application) routes() *chi.Mux {
 
 	r.Get("/", app.home)
 	r.Get("/today", app.serveTodayScreen)
+	r.Post("/today", app.handleTodaySubmission)
 	r.Get("/{day}", app.serveDayScreen)
 	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
 

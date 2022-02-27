@@ -64,45 +64,54 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (app *application) handleTodaySubmission(w http.ResponseWriter, r *http.Request) {
+
+	r.ParseForm()
+	firstEntry := r.Form.Get("first_entry")
+	secondEntry := r.Form.Get("second_entry")
+	thirdEntry := r.Form.Get("third_entry")
+
+	if firstEntry == "" || secondEntry == "" || thirdEntry == "" {
+		http.Error(w, "yeah, you messed up", 400)
+	}
+
+	entries := []string{firstEntry, secondEntry, thirdEntry}
+	app.entries.Insert("lean", entries)
+
+}
+
 func (app *application) serveTodayScreen(w http.ResponseWriter, r *http.Request) {
 
-	// ts, err := template.ParseFiles("./ui/static/html/[date].page.tmpl")
+	// entry, err := app.entries.Get("lean", )
+	ts, err := template.ParseFiles("./ui/static/html/today_not_filled.page.tmpl")
 
-	// if err != nil {
+	if err != nil {
+		app.serverError(w, err)
+		http.Error(w, "Internal Server Error", 500)
+	}
 
-	// 	log.Println(err.Error())
-	// 	http.Error(w, "internal server error", 500)
-	// }
+	err = ts.Execute(w, nil)
 
-	// createdTime, err := time.Parse(time.RFC3339, mockEntry.CreatedTime)
-	// formattedTime := createdTime.Format(layoutUS)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	http.Error(w, "Time parse no bueno", 500)
-
-	// }
-
-	// err = ts.Execute(w, templateData{
-	// 	CreatedTime: formattedTime,
-	// 	Entries:     mockEntry.Entries,
-	// })
-	// if err != nil {
-	// 	log.Println(err.Error())
-	// 	http.Error(w, "Internal Server Error", 500)
-	// }
+	if err != nil {
+		app.serverError(w, err)
+		http.Error(w, "Internal Server Error", 500)
+	}
 
 }
 func (app *application) serveDayScreen(w http.ResponseWriter, r *http.Request) {
 
+	// fmt.Printf("ARE WE ENTEREINGIN SERVE DAY SCREEN")
+	day := chi.URLParam(r, "day")
+
+	if day == "today" || day == "favicon.ico" {
+		return
+	}
 	ts, err := template.ParseFiles("./ui/static/html/[date].page.tmpl")
 
 	if err != nil {
 		app.serverError(w, err)
 		http.Error(w, "internal server error", 500)
 	}
-
-	day := chi.URLParam(r, "day")
 
 	entry, err := app.entries.Get("lean", day)
 
