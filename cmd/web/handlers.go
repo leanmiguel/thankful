@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -21,6 +22,10 @@ type homeTemplateData struct {
 type dayTemplateData struct {
 	Entries     []string
 	CreatedDate string
+}
+
+type todayFilledTemplateData struct {
+	Entries []string
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -78,19 +83,51 @@ func (app *application) handleTodaySubmission(w http.ResponseWriter, r *http.Req
 	entries := []string{firstEntry, secondEntry, thirdEntry}
 	app.entries.Insert("lean", entries)
 
+	http.Redirect(w, r, "/today", http.StatusSeeOther)
 }
 
 func (app *application) serveTodayScreen(w http.ResponseWriter, r *http.Request) {
 
-	// entry, err := app.entries.Get("lean", )
-	ts, err := template.ParseFiles("./ui/static/html/today_not_filled.page.tmpl")
+	currentDate := time.Now().UTC().Format(time.RFC3339)
+
+	currentDateParts := strings.Split(currentDate, "T")
+	noTimeDate := currentDateParts[0]
+
+	entry, err := app.entries.Get("lean", noTimeDate)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "no item found") {
+			ts, err := template.ParseFiles("./ui/static/html/today_not_filled.page.tmpl")
+
+			if err != nil {
+				app.serverError(w, err)
+				http.Error(w, "Internal Server Error", 500)
+			}
+
+			err = ts.Execute(w, nil)
+
+			if err != nil {
+				app.serverError(w, err)
+				http.Error(w, "Internal Server Error", 500)
+			}
+			return
+		} else {
+			app.serverError(w, err)
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
+	}
+
+	ts, err := template.ParseFiles("./ui/static/html/today_completed.page.tmpl")
 
 	if err != nil {
 		app.serverError(w, err)
-		http.Error(w, "Internal Server Error", 500)
+		http.Error(w, "internal server error", 500)
 	}
 
-	err = ts.Execute(w, nil)
+	err = ts.Execute(w, todayFilledTemplateData{
+		Entries: entry.Entries,
+	})
 
 	if err != nil {
 		app.serverError(w, err)
@@ -100,7 +137,6 @@ func (app *application) serveTodayScreen(w http.ResponseWriter, r *http.Request)
 }
 func (app *application) serveDayScreen(w http.ResponseWriter, r *http.Request) {
 
-	// fmt.Printf("ARE WE ENTEREINGIN SERVE DAY SCREEN")
 	day := chi.URLParam(r, "day")
 
 	if day == "today" || day == "favicon.ico" {

@@ -1,6 +1,7 @@
 package dynamo
 
 import (
+	"errors"
 	"leanmiguel/thankful/pkg/models"
 	"log"
 	"time"
@@ -45,8 +46,6 @@ func (m *EntryModel) Insert(user string, entries []string) (int, error) {
 		log.Fatalf("Got error calling PutItem: %s", err)
 	}
 
-	// fmt.Println("DID WE DO")
-
 	return 0, nil
 }
 
@@ -66,6 +65,10 @@ func (m *EntryModel) Get(userId string, createdTime string) (*models.Entry, erro
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 	})
+
+	if *result.Count == 0 {
+		return nil, errors.New("no item found")
+	}
 
 	if err != nil {
 		return nil, err
