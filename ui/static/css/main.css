@@ -33,17 +33,20 @@ li {
 }
 
 li:last-of-type {
-  margin-bottom: var(--size-8);
+  margin-bottom: var(--size-6);
 }
 h1 {
   margin-bottom: var(--size-4);
 }
 
-a {
-  padding-top: var(--size-5);
+.date-link {
   font-size: var(--font-size-4);
   --link: var(--gray-1);
   --link-visited: var(--gray-1);
+}
+
+.top-date {
+  margin-bottom: var(--font-size-2);
 }
 .thankful-for {
   font-style: italic;
@@ -67,4 +70,10 @@ a {
 
 .input_item label {
   width: var(--size-5);
+}
+
+.submit-button {
+  padding: var(--size-2);
+  border-radius: var(--radius-1);
+  margin-bottom: var(--size-4);
 }

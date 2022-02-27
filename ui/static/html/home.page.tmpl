@@ -17,11 +17,11 @@
 
 <div class="container">
 
- <p> <a href="/today">Today</a></p> 
+ <p class="top-date"> <a class="date-link"  href="/today">Today</a></p> 
 
     {{range .AvailableDates}}
     <li>
-    <a href="{{ .DateURL}}">
+    <a class="date-link" href="{{ .DateURL}}">
     {{ .Date}}
     </a>
     </li>
