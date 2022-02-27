@@ -24,10 +24,6 @@ type dayTemplateData struct {
 	CreatedDate string
 }
 
-type todayFilledTemplateData struct {
-	Entries []string
-}
-
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles("./ui/static/html/home.page.tmpl")
@@ -130,8 +126,9 @@ func (app *application) serveTodayScreen(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "internal server error", 500)
 	}
 
-	err = ts.Execute(w, todayFilledTemplateData{
-		Entries: entry.Entries,
+	err = ts.Execute(w, dayTemplateData{
+		Entries:     entry.Entries,
+		CreatedDate: time.Now().UTC().Format(layoutUS),
 	})
 
 	if err != nil {
