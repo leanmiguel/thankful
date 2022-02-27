@@ -35,10 +35,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := app.entries.Latest("lean")
 
+	//TODO: remove last entry when there's no current entry
 	// since today is already inside, remove last entry
-	referenceEntry := *entries
+	// referenceEntry := *entries
 
-	referenceEntry = referenceEntry[:len(referenceEntry)-1]
+	// referenceEntry = referenceEntry[:len(referenceEntry)-1]
 
 	if err != nil {
 		app.serverError(w, err)
@@ -46,7 +47,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	var availableDates []EntryData
 
-	for _, entry := range referenceEntry {
+	for _, entry := range *entries {
 
 		createdTime, err := time.Parse(time.RFC3339, entry.CreatedTime)
 
